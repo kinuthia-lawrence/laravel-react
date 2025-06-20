@@ -2,14 +2,17 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Exceptions\BookNotFoundException;
 use App\Http\Controllers\Controller;
+use App\Exceptions\BookNotFoundException;
 use App\Http\Requests\StoreBookRequest;
 use App\Http\Requests\UpdateBookRequest;
 use App\Http\Resources\BookResource;
+use App\Models\Book;
 use App\Services\BookService;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\Gate;
 
 class BookController extends Controller
 {
@@ -17,7 +20,7 @@ class BookController extends Controller
      * @var BookService
      */
     protected $bookService;
-    
+
     /**
      * BookController constructor
      * 
@@ -27,7 +30,7 @@ class BookController extends Controller
     {
         $this->bookService = $bookService;
     }
-    
+
     /**
      * Display a listing of the books
      * 
@@ -35,10 +38,11 @@ class BookController extends Controller
      */
     public function index(): AnonymousResourceCollection
     {
+        Gate::authorize('viewAny', Book::class);
         $books = $this->bookService->getAllBooks();
         return BookResource::collection($books);
     }
-    
+
     /**
      * Store a newly created book in storage
      * 
@@ -47,10 +51,11 @@ class BookController extends Controller
      */
     public function store(StoreBookRequest $request): BookResource
     {
+        Gate::authorize('create', Book::class);
         $book = $this->bookService->createBook($request->validated());
         return new BookResource($book);
     }
-    
+
     /**
      * Display the specified book
      * 
@@ -61,9 +66,10 @@ class BookController extends Controller
     public function show(int $id): BookResource
     {
         $book = $this->bookService->getBookById($id);
+        Gate::authorize('view', $book);
         return new BookResource($book);
     }
-    
+
     /**
      * Update the specified book in storage
      * 
@@ -74,10 +80,12 @@ class BookController extends Controller
      */
     public function update(UpdateBookRequest $request, int $id): BookResource
     {
-        $book = $this->bookService->updateBook($id, $request->validated());
-        return new BookResource($book);
+        $book = $this->bookService->getBookById($id);
+        Gate::authorize('update', $book);
+        $upadateBook = $this->bookService->updateBook($id, $request->validated());
+        return new BookResource($upadateBook);
     }
-    
+
     /**
      * Remove the specified book from storage
      * 
@@ -87,10 +95,12 @@ class BookController extends Controller
      */
     public function destroy(int $id): JsonResponse
     {
+        $book = $this->bookService->getBookById($id);
+        Gate::authorize('delete', $book);
         $this->bookService->deleteBook($id);
         return response()->json(['message' => 'Book deleted successfully']);
     }
-    
+
     /**
      * Get book by title
      * 
@@ -103,7 +113,7 @@ class BookController extends Controller
         $book = $this->bookService->getBookByTitle($title);
         return new BookResource($book);
     }
-    
+
     /**
      * Get books by author
      * 
