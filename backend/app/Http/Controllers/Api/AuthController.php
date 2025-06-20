@@ -65,7 +65,7 @@ class AuthController extends Controller
         $user = $request->user();
         
         // Revoke previous tokens if you want to have only one active token per user
-        // $user->tokens()->delete();
+        $user->tokens()->delete();
         
         $token = $user->createToken('auth_token')->plainTextToken;
 
