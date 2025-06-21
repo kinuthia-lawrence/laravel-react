@@ -1,4 +1,3 @@
-// src/services/api.js
 import axios from 'axios';
 
 const API = axios.create({
@@ -20,11 +19,3 @@ API.interceptors.request.use(config => {
 });
 
 export default API;
-
-// Example fetch with token
-fetch('http://your-api.com/api/books', {
-  headers: {
-    'Authorization': `Bearer ${localStorage.getItem('token')}`,
-    'Accept': 'application/json'
-  }
-})
